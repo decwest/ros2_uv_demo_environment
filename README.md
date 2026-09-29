@@ -114,7 +114,7 @@ head -n 1 install/uv_shebang_demo/lib/uv_shebang_demo/probe
 
 uvは `0.11.28`。venvには各コンテナの `/usr/bin/python3` を明示し、`--system-site-packages` を付けます。Pythonの自動ダウンロードは禁止しています。`uv sync --frozen --offline` と同梱の小さなwheelだけで依存を導入し、実験用コンテナは `--network none` で起動します。
 
-colconとsetuptoolsはapt版を使います。未修正版のモジュールは変更せず、そのコピーを `/opt/colcon-patched` に置いてパッチを適用します。適用に失敗するとイメージのビルドを停止し、パッチが効かない状態で検証を続けません。
+colconとsetuptoolsはapt版を使います。イメージ構築時にaptパッケージ全体を更新し、ROSのC拡張を読み込めることを確認します。これは特にRollingで、古いベースイメージの一部のROSパッケージだけを更新してABIが不整合になるのを避けるためです。未修正版のモジュールは変更せず、そのコピーを `/opt/colcon-patched` に置いてパッチを適用します。適用に失敗するとイメージのビルドを停止し、パッチが効かない状態で検証を続けません。
 
 タグとaptリポジトリは更新されるため、Dockerfileだけでは過去の環境を完全には再現できません。結果を共有するときは、**依存導入済みデモイメージとレポートを一緒に保存**してください。
 

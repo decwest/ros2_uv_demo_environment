@@ -20,7 +20,10 @@ ENV DEBIAN_FRONTEND=noninteractive \
     HOME=/tmp/demo-home \
     UV_CACHE_DIR=/tmp/demo-uv-cache
 
-RUN apt-get update && apt-get install -y --no-install-recommends \
+# Refresh the whole underlay together. Updating rclpy alone can mix Rolling
+# packages from different syncs and leave unresolved symbols in its C extension.
+RUN apt-get update && apt-get upgrade -y \
+    && apt-get install -y --no-install-recommends \
       patch python3-colcon-common-extensions python3-setuptools python3-venv \
       ros-${ROS_DISTRO}-rclpy ros-${ROS_DISTRO}-ros2run ros-${ROS_DISTRO}-ros2launch \
     && rm -rf /var/lib/apt/lists/*
@@ -28,6 +31,7 @@ COPY --from=uv /uv /usr/local/bin/uv
 COPY . /repo
 RUN /usr/bin/python3 /repo/scripts/prepare_colcon.py \
       /opt/colcon-patched /repo/patches/colcon-core-env-shebang.patch \
+    && /bin/bash -c 'source /opt/ros/${ROS_DISTRO}/setup.bash && /usr/bin/python3 -c "import rclpy; import ros2cli.cli"' \
     && dpkg-query -W > /opt/demo-packages.tsv \
     && chmod +x /repo/docker/entrypoint.sh
 

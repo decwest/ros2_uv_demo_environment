@@ -42,11 +42,14 @@ jobs:
         run: |
           for report in output/*/*/report.md; do
             if [[ -f "$report" ]]; then
-              cat "$report" >> "$GITHUB_STEP_SUMMARY"
+              cat "$report" | tee -a "$GITHUB_STEP_SUMMARY"
               if grep -q '| NOT_COVERED |' "$report"; then
                 echo '::warning::symlink-install fell back to install; develop-path coverage is incomplete. See report.'
               fi
             fi
+          done
+          for environment in output/*/*/environment.json; do
+            if [[ -f "$environment" ]]; then cat "$environment"; fi
           done
       - uses: actions/upload-artifact@v4
         if: always()
