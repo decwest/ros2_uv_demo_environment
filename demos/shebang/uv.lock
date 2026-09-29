@@ -1,0 +1,22 @@
+version = 1
+revision = 3
+requires-python = ">=3.10, <3.15"
+
+[[package]]
+name = "ros2-uv-demo-workspace"
+version = "0.1.0"
+source = { virtual = "." }
+dependencies = [
+    { name = "venv-only-dep" },
+]
+
+[package.metadata]
+requires-dist = [{ name = "venv-only-dep", path = "vendor/venv_only_dep-1.0.0-py3-none-any.whl" }]
+
+[[package]]
+name = "venv-only-dep"
+version = "1.0.0"
+source = { path = "vendor/venv_only_dep-1.0.0-py3-none-any.whl" }
+wheels = [
+    { filename = "venv_only_dep-1.0.0-py3-none-any.whl", hash = "sha256:6f4cb37cc2a280b0d8adca4e5dcea70a5ebd3e016d247604edeea4f260ad45eb" },
+]

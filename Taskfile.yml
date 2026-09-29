@@ -1,0 +1,45 @@
+version: '3'
+
+vars:
+  DISTRO: '{{default "jazzy" .DISTRO}}'
+  CASE: '{{default "all" .CASE}}'
+  BUILD_MODE: '{{default "all" .BUILD_MODE}}'
+  MODE: '{{default "patched" .MODE}}'
+
+tasks:
+  default:
+    desc: List available tasks
+    cmd: task --list
+  jazzy:
+    desc: Compare all shebang cases on Jazzy
+    cmds:
+      - task: demo
+        vars: {DISTRO: jazzy}
+  lyrical:
+    desc: Compare all shebang cases on Lyrical
+    cmds:
+      - task: demo
+        vars: {DISTRO: lyrical}
+  rolling:
+    desc: Compare all shebang cases on Rolling
+    cmds:
+      - task: demo
+        vars: {DISTRO: rolling}
+  build:
+    desc: Build the demo image (DISTRO=jazzy|lyrical|rolling)
+    cmd: ./scripts/demo.sh build '{{.DISTRO}}'
+  demo:
+    desc: Build and compare cases (DISTRO, CASE, BUILD_MODE=install|symlink|all)
+    cmd: ./scripts/demo.sh run '{{.DISTRO}}' '{{.CASE}}' '{{.BUILD_MODE}}'
+  matrix:
+    desc: Compare Jazzy, Lyrical and Rolling, keeping all reports
+    cmd: ./scripts/demo.sh matrix
+  shell:
+    desc: Prepare an interactive workspace (DISTRO, MODE=patched|stock|setup-cfg|venv-build)
+    cmd: ./scripts/demo.sh shell '{{.DISTRO}}' '{{.MODE}}' symlink
+  doctor:
+    desc: Check the local Docker connection and prerequisites
+    cmd: ./scripts/demo.sh doctor
+  test:
+    desc: Run the standard-library test suite (no Docker required)
+    cmd: python3 -m unittest discover -s tests -v

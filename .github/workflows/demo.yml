@@ -1,0 +1,56 @@
+name: ROS 2 uv demo
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  tests:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - run: python -m pip install -r tests/requirements.txt
+      - run: python -m unittest discover -s tests -v
+      - run: bash -n scripts/demo.sh docker/entrypoint.sh
+
+  demo:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 25
+    strategy:
+      fail-fast: false
+      matrix:
+        distro: [jazzy, lyrical, rolling]
+    steps:
+      - uses: actions/checkout@v4
+      - name: Build and run comparisons
+        env:
+          # Native setuptools may no longer support legacy develop. Keep the
+          # explicit NOT_COVERED result and emit a warning in the summary.
+          ALLOW_FALLBACK: '1'
+        run: ./scripts/demo.sh run '${{ matrix.distro }}' all all
+      - name: Publish job summary
+        if: always()
+        shell: bash
+        run: |
+          for report in output/*/*/report.md; do
+            if [[ -f "$report" ]]; then
+              cat "$report" >> "$GITHUB_STEP_SUMMARY"
+              if grep -q '| NOT_COVERED |' "$report"; then
+                echo '::warning::symlink-install fell back to install; develop-path coverage is incomplete. See report.'
+              fi
+            fi
+          done
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: results-${{ matrix.distro }}
+          path: output/
+          retention-days: 14

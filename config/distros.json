@@ -1,0 +1,5 @@
+{
+  "jazzy": "ros:jazzy-ros-base-noble",
+  "lyrical": "ros:lyrical-ros-base-resolute",
+  "rolling": "ros:rolling-ros-base-resolute"
+}

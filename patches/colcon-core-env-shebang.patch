@@ -1,0 +1,115 @@
+diff --git a/colcon_core/task/python/build.py b/colcon_core/task/python/build.py
+index e7f4753..0032152 100644
+--- a/colcon_core/task/python/build.py
++++ b/colcon_core/task/python/build.py
+@@ -22,6 +22,7 @@ from colcon_core.task import run
+ from colcon_core.task import TaskExtensionPoint
+ from colcon_core.task.python import get_data_files_mapping
+ from colcon_core.task.python import get_setup_data
++from colcon_core.task.python.shebang import use_env_python
+ from colcon_core.task.python.template import expand_template
+ 
+ logger = colcon_logger.getChild(__name__)
+@@ -57,6 +58,12 @@ class PythonBuildTask(TaskExtensionPoint):
+         super().__init__()
+         satisfies_version(TaskExtensionPoint.EXTENSION_POINT_VERSION, '^1.0')
+ 
++    def add_arguments(self, *, parser):  # noqa: D102
++        parser.add_argument(
++            '--python-shebang', choices=('default', 'env'), default='default',
++            help='Python console/gui entry-point shebang policy. '
++                 'env uses /usr/bin/env python3 on POSIX (opt-in).')
++
+     async def build(self, *, additional_hooks=None):  # noqa: D102
+         pkg = self.context.pkg
+         args = self.context.args
+@@ -207,6 +214,9 @@ class PythonBuildTask(TaskExtensionPoint):
+                 'pythonpath_develop', Path(base_path), pkg.name, 'PYTHONPATH',
+                 base_path, mode='prepend')
+ 
++        if getattr(args, 'python_shebang', 'default') == 'env':
++            use_env_python(args, setup_py_data, symlink_install)
++
+         hooks = create_environment_hooks(args.install_base, pkg.name)
+         create_environment_scripts(
+             pkg, args, default_hooks=hooks, additional_hooks=additional_hooks)
+diff --git a/colcon_core/task/python/shebang.py b/colcon_core/task/python/shebang.py
+new file mode 100644
+index 0000000..6839e25
+--- /dev/null
++++ b/colcon_core/task/python/shebang.py
+@@ -0,0 +1,74 @@
++# Copyright 2026 Decwest
++# Licensed under the Apache License, Version 2.0
++
++"""Experimental opt-in policy for setuptools-generated entry-point scripts."""
++
++from configparser import ConfigParser
++import os
++from pathlib import Path
++import re
++import shlex
++from string import Template
++
++
++def use_env_python(args, setup_py_data, symlink_install):
++    """Set the shebang of declared console/gui entry points after either build."""
++    if os.name != 'posix':
++        raise RuntimeError('--python-shebang env is supported only on POSIX')
++
++    entry_points = setup_py_data.get('entry_points') or {}
++    if isinstance(entry_points, str):
++        parser = ConfigParser(interpolation=None)
++        parser.optionxform = str
++        parser.read_string(entry_points)
++        entry_points = {
++            group: [f'{name} = {value}' for name, value in parser.items(group)]
++            for group in parser.sections()
++        }
++
++    config = ConfigParser(interpolation=None)
++    config.read(Path(args.path) / 'setup.cfg')
++    script_dir = None
++    if symlink_install:
++        for key in ('script_dir', 'script-dir'):
++            script_dir = config.get('develop', key, fallback=None)
++            if script_dir is not None:
++                break
++    if script_dir is None:
++        for key in ('install_scripts', 'install-scripts'):
++            script_dir = config.get('install', key, fallback=None)
++            if script_dir is not None:
++                break
++    prefix = Path(args.install_base).resolve()
++    script_dir = Template(script_dir or '$base/bin').substitute(
++        base=str(prefix), platbase=str(prefix))
++    directory = Path(script_dir)
++    if not directory.is_absolute():
++        raise RuntimeError('The entry-point script directory must be absolute')
++    if not directory.resolve().is_relative_to(prefix):
++        raise RuntimeError('The entry-point script directory must be in the install prefix')
++
++    for group in ('console_scripts', 'gui_scripts'):
++        entries = entry_points.get(group, [])
++        if isinstance(entries, str):
++            entries = entries.splitlines()
++        for entry in entries:
++            if not entry.strip():
++                continue
++            name = entry.split('=', 1)[0].strip()
++            if not name or name in ('.', '..') or '/' in name or '\\' in name:
++                raise RuntimeError(f'Invalid entry-point name: {name!r}')
++            script = directory / name
++            # These are generated wrappers, not source scripts. Never follow
++            # a symlink into a source tree or rewrite arbitrary executables.
++            if script.is_symlink() or not script.is_file():
++                raise RuntimeError(f'Expected a generated entry-point file: {script}')
++            first_line, separator, body = script.read_bytes().partition(b'\n')
++            if not separator or not first_line.startswith(b'#!') or b'python' not in first_line:
++                raise RuntimeError(f'Unsupported entry-point header: {script}')
++            command = shlex.split(first_line[2:].decode('utf-8'))
++            plain_python = len(command) == 1 and re.fullmatch(
++                r'python[0-9.]*', Path(command[0]).name)
++            if not plain_python and command != ['/usr/bin/env', 'python3']:
++                raise RuntimeError(f'Unsupported entry-point interpreter options: {script}')
++            script.write_bytes(b'#!/usr/bin/env python3\n' + body)

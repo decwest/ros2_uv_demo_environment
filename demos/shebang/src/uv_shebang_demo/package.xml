@@ -1,0 +1,12 @@
+<?xml version="1.0"?>
+<package format="3">
+  <name>uv_shebang_demo</name>
+  <version>0.1.0</version>
+  <description>Report the Python interpreter selected by a ROS console script.</description>
+  <maintainer email="fumiyaonishi1016@gmail.com">Decwest</maintainer>
+  <license>Apache-2.0</license>
+  <buildtool_depend>ament_python</buildtool_depend>
+  <exec_depend>rclpy</exec_depend>
+  <exec_depend>launch_ros</exec_depend>
+  <export><build_type>ament_python</build_type></export>
+</package>

@@ -1,0 +1,8 @@
+# Tool-only environment for the legacy install/develop integration tests.
+setuptools==68.1.2
+colcon-core==0.21.3
+colcon-ros==0.5.0
+colcon-bash==0.5.0
+colcon-recursive-crawl==0.2.3
+colcon-python-setup-py==0.2.9
+colcon-output==0.2.15
