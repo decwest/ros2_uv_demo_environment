@@ -4,6 +4,8 @@ ROS 2のapt環境にワークスペース単位のuv環境を組み合わせた�
 
 [Discourseの議論（投稿14）](https://discourse.openrobotics.org/t/57111/14) のP2を対象に、Jazzy・Lyrical・Rollingで、未修正版・既存の回避策・試験用パッチを同じノードで比較します。GPUは不要です。
 
+[2026-09-29の実測結果](docs/validation.md): 3環境・42条件で期待する動作を確認済みです。
+
 ## 使い方
 
 必要なのは、LinuxまたはWSL上のDocker Engine、Python 3、[Task](https://taskfile.dev/)です。ホストへのROS・uvのインストールは不要です。
