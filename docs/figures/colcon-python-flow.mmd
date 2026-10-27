@@ -1,0 +1,45 @@
+flowchart LR
+    subgraph stock["問題：venvにcolconなし"]
+        direction TB
+        S1["colcon build<br/>→ /usr/bin/colcon"]
+        S2["system Pythonで<br/>colcon → setup.py"]
+        S3["生成スクリプトのシバン<br/>#!/usr/bin/python3"]
+        S4["ノード：system Python<br/>venv専用依存のimport失敗"]
+        S1 -->|"colconのシバン"| S2
+        S2 -->|"setuptoolsが生成"| S3
+        S3 -->|"ros2 run / launch"| S4
+    end
+
+    subgraph aptvenv["方式A：apt版colconを使う"]
+        direction TB
+        A1[".venv/bin/python<br/>-m colcon build"]
+        A2["venv Pythonで<br/>apt版colcon → setup.py"]
+        A3["生成スクリプトのシバン<br/>#!/ws/.venv/bin/python"]
+        A4["ノード：venv Python<br/>venv専用依存のimport成功"]
+        A1 -->|"Pythonを明示"| A2
+        A2 -->|"setuptoolsが生成"| A3
+        A3 -->|"ros2 run / launch"| A4
+    end
+
+    subgraph venvcolcon["方式B：venv版colconを使う"]
+        direction TB
+        B1["colcon build<br/>→ .venv/bin/colcon"]
+        B2["venv Pythonで<br/>venv版colcon → setup.py"]
+        B3["生成スクリプトのシバン<br/>#!/ws/.venv/bin/python3"]
+        B4["ノード：venv Python<br/>venv専用依存のimport成功"]
+        B1 -->|"colconのシバン"| B2
+        B2 -->|"setuptoolsが生成"| B3
+        B3 -->|"ros2 run / launch"| B4
+    end
+
+    stock ~~~ aptvenv ~~~ venvcolcon
+
+    classDef problem fill:#fff2e8,stroke:#bb642c,color:#723c1c,stroke-width:2px
+    classDef solutionA fill:#edf7f2,stroke:#40856a,color:#20513e,stroke-width:2px
+    classDef solutionB fill:#e8f2ff,stroke:#2563a6,color:#12375b,stroke-width:2px
+    class S1,S2,S3,S4 problem
+    class A1,A2,A3,A4 solutionA
+    class B1,B2,B3,B4 solutionB
+    style stock fill:#fffbf7,stroke:#dec5b4,stroke-width:1px
+    style aptvenv fill:#f8fcfa,stroke:#b4d4c5,stroke-width:1px
+    style venvcolcon fill:#f7faff,stroke:#b5cce4,stroke-width:1px

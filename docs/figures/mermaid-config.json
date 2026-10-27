@@ -1,0 +1,23 @@
+{
+  "theme": "base",
+  "htmlLabels": false,
+  "markdownAutoWrap": false,
+  "themeCSS": ".edgeLabel text { paint-order: stroke; stroke: #ffffff; stroke-width: 6px; stroke-linejoin: round; }",
+  "themeVariables": {
+    "fontFamily": "IPAexGothic, Noto Sans JP, sans-serif",
+    "fontSize": "18px",
+    "lineColor": "#64748b",
+    "textColor": "#172033",
+    "primaryTextColor": "#172033",
+    "edgeLabelBackground": "#ffffff",
+    "clusterBkg": "#ffffff",
+    "clusterBorder": "#cbd5e1"
+  },
+  "flowchart": {
+    "wrappingWidth": 420,
+    "curve": "basis",
+    "nodeSpacing": 40,
+    "rankSpacing": 35,
+    "padding": 20
+  }
+}

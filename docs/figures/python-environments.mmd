@@ -1,0 +1,20 @@
+flowchart LR
+    SP["system Python<br/>/usr/bin/python3"]
+    VP["venv Python<br/>.venv/bin/python"]
+
+    AP["systemのパッケージ<br/>apt管理：colcon・setuptoolsなど<br/>/usr/lib/python3/dist-packages"]
+    RP["ROSのパッケージ<br/>apt管理：rclpyなど<br/>/opt/ros/jazzy/..."]
+    LP["venvのパッケージ<br/>uv管理：追加依存<br/>方式B：colcon・setuptoolsも導入"]
+
+    SP -->|"import"| AP
+    SP -->|"ROS setup"| RP
+    VP -->|"--system-site-packages"| AP
+    VP -->|"ROS setup"| RP
+    VP -->|"import"| LP
+
+    classDef system fill:#f1f5f9,stroke:#64748b,color:#172033,stroke-width:2px
+    classDef venv fill:#e8f2ff,stroke:#2563a6,color:#12375b,stroke-width:2px
+    classDef ros fill:#f1edfc,stroke:#7e68a8,color:#40315f,stroke-width:2px
+    class SP,AP system
+    class VP,LP venv
+    class RP ros
